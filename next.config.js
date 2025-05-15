@@ -3,6 +3,7 @@
  * for Docker builds.
  */
 import "./src/env.js";
+import withPWA from "next-pwa";
 
 /** @type {import("next").NextConfig} */
 const config = {
@@ -17,6 +18,26 @@ const config = {
     locales: ["en"],
     defaultLocale: "en",
   },
+
+  // Configure image domains for Next.js Image component
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "eoazmydfuskxpzgxtxva.supabase.co",
+        port: "",
+        pathname: "/storage/v1/object/public/**",
+      },
+    ],
+  },
 };
 
-export default config;
+// Add PWA configuration
+const pwaConfig = withPWA({
+  dest: "public",
+  register: true,
+  skipWaiting: true,
+  disable: process.env.NODE_ENV === "development",
+});
+
+export default pwaConfig(config);

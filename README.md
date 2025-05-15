@@ -1,29 +1,66 @@
-# Create T3 App
+Vision:
+A mobile PWA that turns your iPhone into a live “what-am-I-seeing?” assistant—capturing camera frames, captioning them in real time with LLaVA-13B, streaming the captions back instantly, and archiving every image-and-text pair for later search.
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+· Frontend responsibilities
+PWA shell
 
-## What's next? How do I make an app with this?
+- Next.js Page Router, next-pwa for installable fullscreen app.
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+Camera capture loop
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+- getUserMedia({ video: { facingMode: 'environment' }}).
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Drizzle](https://orm.drizzle.team)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+- Draw frame to <canvas>, toBlob('image/jpeg', 0.75).
 
-## Learn More
+- Throttle FPS (slider).
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+Upload handshake
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+- GET /api/signed-upload → {uploadUrl, getUrl, path}.
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+- supabase.storage.from(bucket).uploadToSignedUrl(path, token, file) (or plain PUT).
 
-## How do I deploy this?
+PO- ST /api/caption with {path, ts, session}.
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+Realtime listener
+
+- supabase.channel('session:'+sessionId) → on broadcast:caption append {caption, imgUrl} to live feed.
+
+History view
+
+- GET /api/history pagination, render timeline.
+
+Controls / UX
+
+- FPS slider, quality indicator, error/retry handling, optional Supabase Auth (magic-link or OAuth).
+
+Everything else—signed uploads, caption generation, realtime push, persistence—runs in three lean Vercel functions plus Supabase’s managed services.
+
+
+iPhone PWA
+  ├─ GET  /api/signed-upload  ───▶  Vercel Edge  ──┐
+  │                                               │
+  ├─ PUT  frame.jpeg  ───────────────▶  Supabase Storage
+  │                                               │
+  └─ POST /api/caption {path,ts,session} ─────────▶ Vercel Serverless
+                                                   │  ├─ signed GET URL
+                                                   │  ├─ Replicate LLaVA
+                                                   │  ├─ INSERT caption row
+                                                   │  └─ Broadcast over Supabase Realtime
+                                                   ▼
+                                      Realtime WS  ◀── phone receives {caption,ts,url}
+
+
+
+| Route                      | Runtime             | Purpose                                                                                                                                                                                                                                            | Core logic |
+| -------------------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| **GET /api/signed-upload** | *Edge*              | Hand back a 5-min signed **PUT** URL + public/read path for Supabase Storage.                                                                                                                                                                      |            |
+| **POST /api/caption**      | *Serverless (Node)* | Body `{path, ts, session}` → <br>1. create signed **GET** URL for the file<br>2. `fetch` Replicate LLaVA<br>3. `INSERT` into Postgres (`captions` table, pgvector optional)<br>4. REST broadcast `{caption, ts, url}` to `session:<uuid>` channel. |            |
+| **GET /api/history**       | *Serverless*        | `?session&cursor` → `SELECT * FROM captions ORDER BY ts DESC LIMIT 200`.                                                                                                                                                                           |            |
+| Area      | npm packages                                                       |
+| --------- | ------------------------------------------------------------------ |
+| Core      | `next`, `react`, `next-pwa`, `tailwindcss`, `@biomejs/biome`       |
+| Supabase  | `@supabase/supabase-js`                                            |
+| DB        | `prisma`, `@prisma/client` (+ `pgvector` extension in Supabase PG) |
+| Inference | `replicate`                                                        |
+| Misc      | `uuid`, `zod`, `framer-motion` (UI polish)                         |
