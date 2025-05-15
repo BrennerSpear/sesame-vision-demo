@@ -48,14 +48,24 @@ export default function Home() {
 
     try {
       setIsUploading(true);
-
-      // Step 1: Get a signed upload URL
+      
+      // Generate a unique request ID to track this specific image processing
+      const requestId = Math.random().toString(36).substring(2, 10);
+      const startTime = Date.now();
+      
+      console.log(`[${requestId}] === PIPELINE STARTED ===`);
+      
+      // Step 3: Get a signed upload URL
+      console.time(`[${requestId}] Step 3: Get signed upload URL`);
       const uploadRes = await fetch("/api/signed-upload");
+      console.timeEnd(`[${requestId}] Step 3: Get signed upload URL`);
+      
       if (!uploadRes.ok) throw new Error("Failed to get upload URL");
 
       const { uploadUrl, getUrl, path } = await uploadRes.json();
 
-      // Step 2: Upload image to storage
+      // Step 4: Upload image to storage
+      console.time(`[${requestId}] Step 4: Upload image to Supabase`);
       const uploadResult = await fetch(uploadUrl, {
         method: "PUT",
         body: blob,
@@ -63,11 +73,13 @@ export default function Home() {
           "Content-Type": "image/jpeg",
         },
       });
-
+      console.timeEnd(`[${requestId}] Step 4: Upload image to Supabase`);
+      
       if (!uploadResult.ok) throw new Error("Failed to upload image");
 
-      // Step 3: Send for captioning
+      // Step 5: Send for captioning
       const timestamp = new Date().toISOString();
+      console.time(`[${requestId}] Step 5-9: Caption API (server processing)`);
       const captionRes = await fetch("/api/caption", {
         method: "POST",
         headers: {
@@ -77,12 +89,20 @@ export default function Home() {
           path,
           timestamp,
           session: sessionId,
+          requestId, // Pass the request ID to correlate server logs
         }),
       });
-
+      console.timeEnd(`[${requestId}] Step 5-9: Caption API (server processing)`);
+      
       if (!captionRes.ok) throw new Error("Failed to generate caption");
 
-      // Caption updates will come through the realtime subscription
+      // Start timing for Step 10: receiving via Realtime
+      console.time(`[${requestId}] Step 10: Receive caption via Realtime`);
+      console.log(`[${requestId}] Waiting for caption via Realtime...`);
+      
+      // Store the start time in sessionStorage for end-to-end calculation
+      sessionStorage.setItem(`start_${requestId}`, startTime.toString());
+
     } catch (error) {
       console.error("Error processing capture:", error);
     } finally {
@@ -138,88 +158,98 @@ export default function Home() {
         </div>
       ) : (
         <main className="flex min-h-screen flex-col bg-gray-50">
-          <header className="bg-white py-4 shadow-sm">
-            <div className="container mx-auto px-4">
-              <h1 className="font-bold text-2xl text-gray-900">
-                Vision Assistant
-              </h1>
-              <p className="text-gray-500 text-sm">
-                Session: {sessionId.slice(0, 8)}...
-              </p>
+          <header className="bg-white py-2 shadow-sm">
+            <div className="container mx-auto px-2">
+              <div className="flex justify-between items-center">
+                <h1 className="font-bold text-lg text-gray-900">
+                  Vision Assistant
+                </h1>
+                <p className="text-gray-500 text-xs">
+                  Session: {sessionId.slice(0, 8)}
+                </p>
+              </div>
             </div>
           </header>
 
-          <div className="container mx-auto flex flex-1 flex-col gap-6 px-4 py-6 md:flex-row">
-            <div className="space-y-6 md:w-1/2">
-              <div className="rounded-lg bg-white p-4 shadow-sm">
-                <h2 className="mb-3 font-semibold text-lg">Camera</h2>
-                <Camera
-                  onCapture={handleCapture}
-                  fps={fps}
-                  quality={quality}
-                  isActive={isActive}
-                />
+          <div className="container mx-auto flex flex-1 flex-col px-2 py-2">
+            {/* Top section with camera and controls side by side - works on mobile and desktop */}
+            <div className="flex flex-row gap-2 mb-2">
+              {/* Camera section - smaller width (50% on mobile) */}
+              <div className="w-1/2">
+                <div className="rounded-lg bg-white p-2 shadow-sm">
+                  <h2 className="mb-1 font-semibold text-sm">Camera</h2>
+                  <Camera
+                    onCapture={handleCapture}
+                    fps={fps}
+                    quality={quality}
+                    isActive={isActive}
+                  />
+                </div>
               </div>
-
-              <div className="rounded-lg bg-white p-4 shadow-sm">
-                <h2 className="mb-3 font-semibold text-lg">Controls</h2>
-                <CameraControls
-                  fps={fps}
-                  setFps={setFps}
-                  quality={quality}
-                  setQuality={setQuality}
-                  isActive={isActive}
-                  setIsActive={setIsActive}
-                />
+              
+              {/* Controls section - side by side with camera (50% on mobile) */}
+              <div className="w-1/2">
+                <div className="rounded-lg bg-white p-2 shadow-sm h-full">
+                  <h2 className="mb-1 font-semibold text-sm">Controls</h2>
+                  <CameraControls
+                    fps={fps}
+                    setFps={setFps}
+                    quality={quality}
+                    setQuality={setQuality}
+                    isActive={isActive}
+                    setIsActive={setIsActive}
+                  />
+                </div>
               </div>
             </div>
-
-            <div className="md:w-1/2">
-              <div className="h-full rounded-lg bg-white p-4 shadow-sm">
-                <h2 className="mb-3 font-semibold text-lg">Live Captions</h2>
+            
+            {/* Status indicator */}
+            {isUploading && (
+              <div className="mb-2">
+                <div className="rounded-lg bg-white p-2 shadow-sm flex items-center">
+                  <svg
+                    className="mr-2 h-5 w-5 animate-spin text-blue-600"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    role="img"
+                    aria-labelledby="processingSpinnerTitle"
+                  >
+                    <title id="processingSpinnerTitle">Processing Image</title>
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                  <span className="text-blue-600 text-sm">Processing image...</span>
+                </div>
+              </div>
+            )}
+            
+            {/* Captions section - full width */}
+            <div className="flex-1">
+              <div className="h-full rounded-lg bg-white p-2 shadow-sm">
+                <h2 className="mb-1 font-semibold text-sm">Live Captions</h2>
 
                 {isLoading ? (
-                  <div className="flex h-40 items-center justify-center">
-                    <p className="text-gray-500">Loading captions...</p>
+                  <div className="flex h-20 items-center justify-center">
+                    <p className="text-gray-500 text-sm">Loading captions...</p>
                   </div>
                 ) : error ? (
-                  <div className="rounded bg-red-50 p-4 text-red-600">
+                  <div className="rounded bg-red-50 p-2 text-red-600 text-sm">
                     <p>{error}</p>
                   </div>
                 ) : (
                   <CaptionFeed captions={captions} limit={20} />
-                )}
-
-                {/* Upload status indicator */}
-                {isUploading && (
-                  <div className="mt-4 inline-flex items-center rounded-full bg-blue-50 px-4 py-2 text-blue-600 text-sm">
-                    <svg
-                      className="-ml-1 mr-2 h-4 w-4 animate-spin text-blue-600"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      role="img"
-                      aria-labelledby="processingSpinnerTitle"
-                    >
-                      <title id="processingSpinnerTitle">
-                        Processing Image
-                      </title>
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      />
-                    </svg>
-                    Processing image...
-                  </div>
                 )}
               </div>
             </div>

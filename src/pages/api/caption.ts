@@ -32,6 +32,7 @@ const requestSchema = z.object({
   path: z.string(),
   timestamp: z.string().optional(),
   session: z.string(),
+  requestId: z.string().optional(), // For tracking pipeline timing
 });
 
 export default async function handler(
@@ -52,23 +53,33 @@ export default async function handler(
       });
     }
 
-    const { path, session } = validation.data;
+    const { path, session, requestId = "unknown" } = validation.data;
     const timestamp = validation.data.timestamp ?? new Date().toISOString();
 
-    // Create a public URL for the image
+    console.log(`[${requestId}] === SERVER PROCESSING STARTED ===`);
+    const serverStartTime = Date.now();
+    
+    // Step 6: Preparing to fetch image from Supabase
+    console.time(`[${requestId}] Step 6: Prepare image URL from Supabase`);
     const bucketName = "vision-images";
     const imageUrl = `${env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${bucketName}/${path}`;
+    console.timeEnd(`[${requestId}] Step 6: Prepare image URL from Supabase`);
 
-    // Generate a caption using Replicate
+    // Step 7: Generate a caption using Replicate
+    console.time(`[${requestId}] Step 7: Generate caption with Replicate LLaVA-13B`);
     const rawCaption = await generateCaption(imageUrl);
+    console.timeEnd(`[${requestId}] Step 7: Generate caption with Replicate LLaVA-13B`);
     
-    // Format the caption as "thoughts: <all sentences except last> observations: <last sentence>"
+    // Format the caption
+    console.time(`[${requestId}] Format caption`);
     const formattedCaption = formatCaption(rawCaption);
+    console.timeEnd(`[${requestId}] Format caption`);
 
     // Create a unique ID for this caption
     const captionId = uuidv4();
 
-    // Check if session exists, if not create it
+    // Step 8a: Session check and creation if needed
+    console.time(`[${requestId}] Step 8a: Session check`);
     const existingSession = await db.session.findUnique({
       where: {
         id: session,
@@ -76,15 +87,17 @@ export default async function handler(
     });
 
     if (!existingSession) {
-      console.log("Creating new session:", session);
+      console.log(`[${requestId}] Creating new session:`, session);
       await db.session.create({
         data: {
           id: session,
         },
       });
     }
+    console.timeEnd(`[${requestId}] Step 8a: Session check`);
 
-    // Store the caption in the database
+    // Step 8b: Store the caption in the database
+    console.time(`[${requestId}] Step 8b: Store caption in database`);
     await db.caption.create({
       data: {
         id: captionId,
@@ -95,8 +108,10 @@ export default async function handler(
         caption: formattedCaption,
       },
     });
+    console.timeEnd(`[${requestId}] Step 8b: Store caption in database`);
 
-    // Broadcast the caption to the client via Supabase Realtime
+    // Step 9: Broadcast the caption to the client via Supabase Realtime
+    console.time(`[${requestId}] Step 9: Broadcast via Supabase Realtime`);
     await supabaseAdmin.channel(`session:${session}`).send({
       type: "broadcast",
       event: "caption",
@@ -105,15 +120,24 @@ export default async function handler(
         caption: formattedCaption,
         imageUrl,
         timestamp,
+        requestId, // Pass the request ID back to correlate with client logs
       },
     });
+    console.timeEnd(`[${requestId}] Step 9: Broadcast via Supabase Realtime`);
 
+    // Log total server processing time
+    const serverEndTime = Date.now();
+    const serverTotalTime = serverEndTime - serverStartTime;
+    console.log(`[${requestId}] === SERVER PROCESSING COMPLETE (${serverTotalTime}ms) ===`);
+    
     return res.status(200).json({
       success: true,
       caption: formattedCaption,
       rawCaption,
       imageUrl,
       id: captionId,
+      requestId,
+      processingTime: serverTotalTime,
     });
   } catch (error) {
     console.error("Error in caption API:", error);

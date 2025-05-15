@@ -16,31 +16,45 @@ export const CameraControls = ({
   setIsActive,
 }: CameraControlsProps) => {
   return (
-    <div className="space-y-4 rounded-lg bg-gray-100 p-4">
+    <div className="space-y-2 rounded-lg bg-gray-100 p-2">
+      <div>
+        <button
+          type="button"
+          onClick={() => setIsActive(!isActive)}
+          className={`w-full rounded-md px-3 py-1.5 text-sm ${
+            isActive
+              ? "bg-red-500 text-white hover:bg-red-600"
+              : "bg-green-500 text-white hover:bg-green-600"
+          }`}
+        >
+          {isActive ? "Stop Camera" : "Start Camera"}
+        </button>
+      </div>
+      
       <div>
         <div className="flex justify-between">
-          <label htmlFor="fps-slider" className="block font-medium text-sm">
+          <label htmlFor="fps-slider" className="block font-medium text-xs">
             FPS: {fps}
           </label>
           <span className="text-gray-500 text-xs">
-            {fps < 5 ? "Low" : fps < 15 ? "Medium" : "High"} usage
+            {fps < 3 ? "Low" : fps < 8 ? "Medium" : "High"}
           </span>
         </div>
         <input
           id="fps-slider"
           type="range"
           min="1"
-          max="30"
+          max="15"
           step="1"
           value={fps}
           onChange={(e) => setFps(Number(e.target.value))}
-          className="w-full"
+          className="w-full h-4"
         />
       </div>
 
       <div>
         <div className="flex justify-between">
-          <label htmlFor="quality-slider" className="block font-medium text-sm">
+          <label htmlFor="quality-slider" className="block font-medium text-xs">
             Quality: {Math.round(quality * 100)}%
           </label>
           <span className="text-gray-500 text-xs">
@@ -55,22 +69,8 @@ export const CameraControls = ({
           step="0.05"
           value={quality}
           onChange={(e) => setQuality(Number(e.target.value))}
-          className="w-full"
+          className="w-full h-4"
         />
-      </div>
-
-      <div className="pt-2">
-        <button
-          type="button"
-          onClick={() => setIsActive(!isActive)}
-          className={`w-full rounded-md px-4 py-2 ${
-            isActive
-              ? "bg-red-500 text-white hover:bg-red-600"
-              : "bg-green-500 text-white hover:bg-green-600"
-          }`}
-        >
-          {isActive ? "Pause Camera" : "Start Camera"}
-        </button>
       </div>
     </div>
   );
