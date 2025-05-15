@@ -5,12 +5,14 @@ import { Camera } from "../components/Camera";
 import { CameraControls } from "../components/CameraControls";
 import { type Caption, CaptionFeed } from "../components/CaptionFeed";
 import { useRealtimeCaptions } from "../hooks/useRealtimeCaptions";
+import { DEFAULT_PROMPT } from "../config/prompts";
 
 export default function Home() {
   // Camera settings
-  const [fps, setFps] = useState(1);
   const [quality, setQuality] = useState(0.75);
   const [isActive, setIsActive] = useState(false);
+  const [model, setModel] = useState<"13b" | "7b">("13b");
+  const [prompt, setPrompt] = useState(DEFAULT_PROMPT);
 
   // Session management
   const [sessionId, setSessionId] = useState<string>("");
@@ -18,9 +20,17 @@ export default function Home() {
 
   // Uploading state
   const [isUploading, setIsUploading] = useState(false);
+  const [processingImageUrl, setProcessingImageUrl] = useState<string | null>(null);
 
   // Use the realtime captions hook to get live updates
-  const { captions, isLoading, error } = useRealtimeCaptions(sessionId);
+  const handleNewCaption = () => {
+    // Clear the processing image when a new caption is received
+    setProcessingImageUrl(null);
+    
+    // Make the camera available for a new capture by briefly toggling isUploading
+    setIsUploading(false);
+  };
+  const { captions, isLoading, error } = useRealtimeCaptions(sessionId, handleNewCaption);
 
   // Initialize session on first load
   useEffect(() => {
@@ -44,7 +54,7 @@ export default function Home() {
 
   // Handle frame capture
   const handleCapture = async (blob: Blob) => {
-    if (!sessionId || isUploading) return;
+    if (!sessionId || isUploading || !isActive) return;
 
     try {
       setIsUploading(true);
@@ -76,6 +86,9 @@ export default function Home() {
       console.timeEnd(`[${requestId}] Step 4: Upload image to Supabase`);
 
       if (!uploadResult.ok) throw new Error("Failed to upload image");
+      
+      // Store the getUrl for displaying the processing image
+      setProcessingImageUrl(getUrl);
 
       // Step 5: Send for captioning
       const timestamp = new Date().toISOString();
@@ -90,6 +103,8 @@ export default function Home() {
           timestamp,
           session: sessionId,
           requestId, // Pass the request ID to correlate server logs
+          model,
+          prompt,
         }),
       });
       console.timeEnd(
@@ -106,7 +121,9 @@ export default function Home() {
       sessionStorage.setItem(`start_${requestId}`, startTime.toString());
     } catch (error) {
       console.error("Error processing capture:", error);
+      setProcessingImageUrl(null);
     } finally {
+      // Clear processing state when we receive the response or in case of error
       setIsUploading(false);
     }
   };
@@ -211,7 +228,6 @@ export default function Home() {
                   <h2 className="mb-1 font-semibold text-sm">Camera</h2>
                   <Camera
                     onCapture={handleCapture}
-                    fps={fps}
                     quality={quality}
                     isActive={isActive}
                   />
@@ -223,12 +239,14 @@ export default function Home() {
                 <div className="h-full rounded-lg bg-white p-2 shadow-sm">
                   <h2 className="mb-1 font-semibold text-sm">Controls</h2>
                   <CameraControls
-                    fps={fps}
-                    setFps={setFps}
                     quality={quality}
                     setQuality={setQuality}
                     isActive={isActive}
                     setIsActive={setIsActive}
+                    model={model}
+                    setModel={setModel}
+                    prompt={prompt}
+                    setPrompt={setPrompt}
                   />
                 </div>
               </div>
@@ -238,32 +256,48 @@ export default function Home() {
             {isUploading && (
               <div className="mb-2">
                 <div className="flex items-center rounded-lg bg-white p-2 shadow-sm">
-                  <svg
-                    className="mr-2 h-5 w-5 animate-spin text-blue-600"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    role="img"
-                    aria-labelledby="processingSpinnerTitle"
-                  >
-                    <title id="processingSpinnerTitle">Processing Image</title>
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
-                  <span className="text-blue-600 text-sm">
-                    Processing image...
-                  </span>
+                  <div className="flex items-center flex-1">
+                    <svg
+                      className="mr-2 h-5 w-5 animate-spin text-blue-600"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      role="img"
+                      aria-labelledby="processingSpinnerTitle"
+                    >
+                      <title id="processingSpinnerTitle">Processing Image</title>
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    <div>
+                      <span className="text-blue-600 text-sm">
+                        Processing image with LLaVA-{model}...
+                      </span>
+                      <div className="text-xs text-gray-500">
+                        This may take 5-15 seconds. Next photo will be taken automatically when complete.
+                      </div>
+                    </div>
+                  </div>
+                  {processingImageUrl && (
+                    <div className="ml-2 relative h-16 w-16 flex-shrink-0">
+                      <img
+                        src={processingImageUrl}
+                        alt="Processing"
+                        className="h-full w-full rounded object-cover"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             )}

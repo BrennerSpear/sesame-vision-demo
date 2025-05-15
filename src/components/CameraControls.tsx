@@ -1,19 +1,25 @@
+import { PROMPTS } from "../config/prompts";
+
 interface CameraControlsProps {
-  fps: number;
-  setFps: (fps: number) => void;
   quality: number;
   setQuality: (quality: number) => void;
   isActive: boolean;
   setIsActive: (isActive: boolean) => void;
+  model: "13b" | "7b";
+  setModel: (model: "13b" | "7b") => void;
+  prompt: string;
+  setPrompt: (prompt: string) => void;
 }
 
 export const CameraControls = ({
-  fps,
-  setFps,
   quality,
   setQuality,
   isActive,
   setIsActive,
+  model,
+  setModel,
+  prompt,
+  setPrompt,
 }: CameraControlsProps) => {
   return (
     <div className="space-y-2 rounded-lg bg-gray-100 p-2">
@@ -31,26 +37,6 @@ export const CameraControls = ({
         </button>
       </div>
 
-      <div>
-        <div className="flex justify-between">
-          <label htmlFor="fps-slider" className="block font-medium text-xs">
-            FPS: {fps}
-          </label>
-          <span className="text-gray-500 text-xs">
-            {fps < 3 ? "Low" : fps < 8 ? "Medium" : "High"}
-          </span>
-        </div>
-        <input
-          id="fps-slider"
-          type="range"
-          min="1"
-          max="15"
-          step="1"
-          value={fps}
-          onChange={(e) => setFps(Number(e.target.value))}
-          className="h-4 w-full"
-        />
-      </div>
 
       <div>
         <div className="flex justify-between">
@@ -71,6 +57,62 @@ export const CameraControls = ({
           onChange={(e) => setQuality(Number(e.target.value))}
           className="h-4 w-full"
         />
+      </div>
+      
+      <div>
+        <div className="flex justify-between">
+          <label className="block font-medium text-xs">
+            Model
+          </label>
+        </div>
+        <div className="grid grid-cols-2 gap-2 mt-1">
+          <button
+            type="button"
+            onClick={() => setModel("13b")}
+            className={`rounded px-2 py-1 text-xs ${
+              model === "13b"
+                ? "bg-indigo-600 text-white"
+                : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+            }`}
+          >
+            LLaVA-13B
+          </button>
+          <button
+            type="button"
+            onClick={() => setModel("7b")}
+            className={`rounded px-2 py-1 text-xs ${
+              model === "7b"
+                ? "bg-indigo-600 text-white"
+                : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+            }`}
+          >
+            LLaVA-7B
+          </button>
+        </div>
+      </div>
+      
+      <div>
+        <div className="flex justify-between">
+          <label className="block font-medium text-xs">
+            Prompt
+          </label>
+        </div>
+        <div className="mt-1">
+          <select 
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            className="w-full rounded border border-gray-300 px-2 py-1 text-xs"
+          >
+            {Object.entries(PROMPTS).map(([key, value]) => (
+              <option key={key} value={value}>
+                {key.charAt(0).toUpperCase() + key.slice(1).toLowerCase()}
+              </option>
+            ))}
+          </select>
+          <div className="mt-2 text-xs text-gray-500 h-40 overflow-y-auto rounded border border-gray-200 p-2 whitespace-pre-wrap">
+            {prompt}
+          </div>
+        </div>
       </div>
     </div>
   );

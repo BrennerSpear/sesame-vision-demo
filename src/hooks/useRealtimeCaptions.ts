@@ -2,7 +2,10 @@ import { useEffect, useState } from "react";
 import type { Caption } from "../components/CaptionFeed";
 import { createSupabaseClient } from "../utils/supabase-browser";
 
-export function useRealtimeCaptions(sessionId: string) {
+export function useRealtimeCaptions(
+  sessionId: string, 
+  onNewCaption?: () => void
+) {
   const [captions, setCaptions] = useState<Caption[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +29,10 @@ export function useRealtimeCaptions(sessionId: string) {
         }
 
         const data = await response.json();
-        setCaptions(data.captions);
+        // API already returns newest first, so we reverse to get oldest first
+        // This way new captions will be added at the end (bottom)
+        const reversedCaptions = [...data.captions].reverse();
+        setCaptions(reversedCaptions);
       } catch (err) {
         console.error("Error fetching captions:", err);
         setError(
@@ -64,7 +70,17 @@ export function useRealtimeCaptions(sessionId: string) {
           if (current.some((c) => c.id === payload.payload.id)) {
             return current;
           }
-          return [...current, payload.payload];
+          
+          // Create the new state first
+          const newState = [...current, payload.payload];
+          
+          // Call the onNewCaption callback separately, after state update
+          // This prevents the callback from running during render
+          if (onNewCaption) {
+            setTimeout(onNewCaption, 0);
+          }
+          
+          return newState;
         });
       })
       .subscribe((status) => {

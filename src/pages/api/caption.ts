@@ -5,6 +5,7 @@ import { env } from "../../env";
 import { db } from "../../server/db";
 import { generateCaption } from "../../server/replicate";
 import { supabaseAdmin } from "../../server/supabase";
+import { setPrompt } from "../../config/prompts";
 
 /**
  * Format a caption into "thoughts: <all but last sentence> observations: <last sentence>"
@@ -33,6 +34,8 @@ const requestSchema = z.object({
   timestamp: z.string().optional(),
   session: z.string(),
   requestId: z.string().optional(), // For tracking pipeline timing
+  model: z.enum(["13b", "7b"]).default("13b"),
+  prompt: z.string().optional(), // Optional prompt parameter
 });
 
 export default async function handler(
@@ -53,8 +56,13 @@ export default async function handler(
       });
     }
 
-    const { path, session, requestId = "unknown" } = validation.data;
+    const { path, session, requestId = "unknown", model, prompt } = validation.data;
     const timestamp = validation.data.timestamp ?? new Date().toISOString();
+    
+    // If a prompt was provided, set it as the current prompt
+    if (prompt) {
+      setPrompt(prompt);
+    }
 
     console.log(`[${requestId}] === SERVER PROCESSING STARTED ===`);
     const serverStartTime = Date.now();
@@ -67,11 +75,11 @@ export default async function handler(
 
     // Step 7: Generate a caption using Replicate
     console.time(
-      `[${requestId}] Step 7: Generate caption with Replicate LLaVA-13B`,
+      `[${requestId}] Step 7: Generate caption with Replicate LLaVA-${model}`,
     );
-    const rawCaption = await generateCaption(imageUrl);
+    const rawCaption = await generateCaption(imageUrl, model);
     console.timeEnd(
-      `[${requestId}] Step 7: Generate caption with Replicate LLaVA-13B`,
+      `[${requestId}] Step 7: Generate caption with Replicate LLaVA-${model}`,
     );
 
     // Format the caption

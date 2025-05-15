@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { useEffect, useRef } from "react";
 
 export interface Caption {
   id: string;
@@ -14,24 +13,9 @@ interface CaptionFeedProps {
 }
 
 export const CaptionFeed = ({ captions, limit = 10 }: CaptionFeedProps) => {
-  const feedEndRef = useRef<HTMLDivElement>(null);
-
-  // Show only the most recent captions based on limit
+  // Display most recent captions (up to the limit)
+  // Captions are in chronological order (oldest first, newest last)
   const displayCaptions = captions.slice(-limit);
-
-  // Auto-scroll to the bottom when component mounts
-  useEffect(() => {
-    if (feedEndRef.current) {
-      feedEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, []); // Execute only on component mount
-
-  // Separate effect for scrolling when captions change
-  useEffect(() => {
-    if (displayCaptions.length > 0 && feedEndRef.current) {
-      feedEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [displayCaptions.length]);
 
   return (
     <div className="max-h-[60vh] overflow-y-auto rounded-lg border">
@@ -130,14 +114,16 @@ export const CaptionFeed = ({ captions, limit = 10 }: CaptionFeedProps) => {
                             </div>
                           )}
 
-                          <div>
-                            <span className="font-medium text-gray-700 text-xs">
-                              OBSERVATION:
-                            </span>
-                            <p className="font-medium text-gray-900 text-sm">
-                              {observations}
-                            </p>
-                          </div>
+                          {observations && observations.trim() !== "" && (
+                            <div>
+                              <span className="font-medium text-gray-700 text-xs">
+                                OBSERVATION:
+                              </span>
+                              <p className="font-medium text-gray-900 text-sm">
+                                {observations}
+                              </p>
+                            </div>
+                          )}
                         </>
                       );
                     }
@@ -199,14 +185,16 @@ export const CaptionFeed = ({ captions, limit = 10 }: CaptionFeedProps) => {
                           </div>
                         )}
 
-                        <div>
-                          <span className="font-medium text-gray-700 text-xs">
-                            OBSERVATION:
-                          </span>
-                          <p className="font-medium text-gray-900 text-sm">
-                            {observation}
-                          </p>
-                        </div>
+                        {observation && observation.trim() !== "" && (
+                          <div>
+                            <span className="font-medium text-gray-700 text-xs">
+                              OBSERVATION:
+                            </span>
+                            <p className="font-medium text-gray-900 text-sm">
+                              {observation}
+                            </p>
+                          </div>
+                        )}
                       </>
                     );
                   })()}
@@ -217,7 +205,6 @@ export const CaptionFeed = ({ captions, limit = 10 }: CaptionFeedProps) => {
               </div>
             </li>
           ))}
-          <div ref={feedEndRef} />
         </ul>
       )}
     </div>

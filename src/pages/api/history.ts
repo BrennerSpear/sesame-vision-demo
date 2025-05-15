@@ -35,7 +35,7 @@ export default async function handler(
         sessionId: session,
       },
       orderBy: {
-        timestamp: "desc",
+        timestamp: "desc", // Newest first
       },
       take: limit,
       ...(cursor

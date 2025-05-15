@@ -2,18 +2,15 @@ import { useEffect, useRef, useState } from "react";
 
 interface CameraProps {
   onCapture: (blob: Blob) => void;
-  fps: number;
   quality: number;
   isActive: boolean;
 }
 
-export const Camera = ({ onCapture, fps, quality, isActive }: CameraProps) => {
+export const Camera = ({ onCapture, quality, isActive }: CameraProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
-  const requestRef = useRef<number | undefined>(undefined);
-  const previousTimeRef = useRef<number | undefined>(undefined);
-  const fpsInterval = useRef<number>(1000 / fps);
+  const [isCapturing, setIsCapturing] = useState(false);
 
   // Initialize camera
   useEffect(() => {
@@ -86,93 +83,57 @@ export const Camera = ({ onCapture, fps, quality, isActive }: CameraProps) => {
           track.stop();
         }
       }
-      if (requestRef.current) {
-        cancelAnimationFrame(requestRef.current);
-      }
     };
   }, []);
 
-  // Update FPS interval when fps changes
-  useEffect(() => {
-    fpsInterval.current = 1000 / fps;
-  }, [fps]);
-
-  // Capture state management
-  const [isCapturing, setIsCapturing] = useState(false);
-  const captureCountRef = useRef(0);
-
-  // Frame capture loop
-  useEffect(() => {
-    if (!isActive) {
-      if (requestRef.current) {
-        cancelAnimationFrame(requestRef.current);
-        requestRef.current = undefined;
-        previousTimeRef.current = undefined;
-      }
-      return;
-    }
-
-    const captureFrame = async (timestamp: number) => {
-      if (previousTimeRef.current === undefined) {
-        previousTimeRef.current = timestamp;
-      }
-
-      const elapsed = timestamp - previousTimeRef.current;
-      const currentFpsInterval = fpsInterval.current;
-
-      if (elapsed > currentFpsInterval) {
-        // Take the time difference into account to avoid drift
-        previousTimeRef.current = timestamp - (elapsed % currentFpsInterval);
-
-        const video = videoRef.current;
-        const canvas = canvasRef.current;
-
-        if (video && canvas && video.readyState >= 2 && !isCapturing) {
-          setIsCapturing(true);
-          captureCountRef.current += 1;
-
-          try {
-            const ctx = canvas.getContext("2d");
-            if (ctx) {
-              // Set canvas dimensions to match video
-              canvas.width = video.videoWidth;
-              canvas.height = video.videoHeight;
-
-              // Draw video frame on canvas
-              ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-              // Convert canvas to blob and send to parent
-              canvas.toBlob(
-                (blob) => {
-                  if (blob) {
-                    onCapture(blob);
-                  }
-                  setIsCapturing(false);
-                },
-                "image/jpeg",
-                quality,
-              );
-            } else {
+  // Function to capture a single frame
+  const captureFrame = () => {
+    if (isCapturing) return; // Don't start a new capture if already capturing
+    
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    
+    if (video && canvas && video.readyState >= 2) {
+      setIsCapturing(true);
+      
+      try {
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          // Set canvas dimensions to match video
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          
+          // Draw video frame on canvas
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          
+          // Convert canvas to blob and send to parent
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                onCapture(blob);
+              }
               setIsCapturing(false);
-            }
-          } catch (err) {
-            console.error("Error capturing frame:", err);
-            setIsCapturing(false);
-          }
+            },
+            "image/jpeg",
+            quality,
+          );
+        } else {
+          setIsCapturing(false);
         }
+      } catch (err) {
+        console.error("Error capturing frame:", err);
+        setIsCapturing(false);
       }
-
-      requestRef.current = requestAnimationFrame(captureFrame);
-    };
-
-    requestRef.current = requestAnimationFrame(captureFrame);
-
-    return () => {
-      if (requestRef.current) {
-        cancelAnimationFrame(requestRef.current);
-      }
-    };
-  }, [isActive, onCapture, quality, isCapturing]); // Removed fps from dependencies
+    }
+  };
+  
+  // Capture a frame when active and not already capturing
+  useEffect(() => {
+    // Only capture if active and not already capturing
+    if (isActive && !isCapturing) {
+      captureFrame();
+    }
+  }, [isActive, isCapturing, quality, onCapture]);
 
   return (
     <div className="relative w-full">
