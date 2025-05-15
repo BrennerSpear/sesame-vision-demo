@@ -13,17 +13,17 @@ function formatCaption(caption: string): string {
   // Clean up the caption and split into sentences
   // This regex matches sentence endings (period, question mark, exclamation) followed by a space
   const sentences = caption.trim().split(/(?<=[.!?])\s+/);
-  
+
   if (sentences.length <= 1) {
     return `Observations: ${caption}`;
   }
-  
+
   // The last sentence is the observation
   const observation = sentences.pop() || "";
-  
+
   // All other sentences are the thoughts
   const thoughts = sentences.join(" ");
-  
+
   return `Thoughts: ${thoughts}\n\nObservations: ${observation}`;
 }
 
@@ -58,7 +58,7 @@ export default async function handler(
 
     console.log(`[${requestId}] === SERVER PROCESSING STARTED ===`);
     const serverStartTime = Date.now();
-    
+
     // Step 6: Preparing to fetch image from Supabase
     console.time(`[${requestId}] Step 6: Prepare image URL from Supabase`);
     const bucketName = "vision-images";
@@ -66,10 +66,14 @@ export default async function handler(
     console.timeEnd(`[${requestId}] Step 6: Prepare image URL from Supabase`);
 
     // Step 7: Generate a caption using Replicate
-    console.time(`[${requestId}] Step 7: Generate caption with Replicate LLaVA-13B`);
+    console.time(
+      `[${requestId}] Step 7: Generate caption with Replicate LLaVA-13B`,
+    );
     const rawCaption = await generateCaption(imageUrl);
-    console.timeEnd(`[${requestId}] Step 7: Generate caption with Replicate LLaVA-13B`);
-    
+    console.timeEnd(
+      `[${requestId}] Step 7: Generate caption with Replicate LLaVA-13B`,
+    );
+
     // Format the caption
     console.time(`[${requestId}] Format caption`);
     const formattedCaption = formatCaption(rawCaption);
@@ -128,8 +132,10 @@ export default async function handler(
     // Log total server processing time
     const serverEndTime = Date.now();
     const serverTotalTime = serverEndTime - serverStartTime;
-    console.log(`[${requestId}] === SERVER PROCESSING COMPLETE (${serverTotalTime}ms) ===`);
-    
+    console.log(
+      `[${requestId}] === SERVER PROCESSING COMPLETE (${serverTotalTime}ms) ===`,
+    );
+
     return res.status(200).json({
       success: true,
       caption: formattedCaption,

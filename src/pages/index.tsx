@@ -48,18 +48,18 @@ export default function Home() {
 
     try {
       setIsUploading(true);
-      
+
       // Generate a unique request ID to track this specific image processing
       const requestId = Math.random().toString(36).substring(2, 10);
       const startTime = Date.now();
-      
+
       console.log(`[${requestId}] === PIPELINE STARTED ===`);
-      
+
       // Step 3: Get a signed upload URL
       console.time(`[${requestId}] Step 3: Get signed upload URL`);
       const uploadRes = await fetch("/api/signed-upload");
       console.timeEnd(`[${requestId}] Step 3: Get signed upload URL`);
-      
+
       if (!uploadRes.ok) throw new Error("Failed to get upload URL");
 
       const { uploadUrl, getUrl, path } = await uploadRes.json();
@@ -74,7 +74,7 @@ export default function Home() {
         },
       });
       console.timeEnd(`[${requestId}] Step 4: Upload image to Supabase`);
-      
+
       if (!uploadResult.ok) throw new Error("Failed to upload image");
 
       // Step 5: Send for captioning
@@ -92,17 +92,18 @@ export default function Home() {
           requestId, // Pass the request ID to correlate server logs
         }),
       });
-      console.timeEnd(`[${requestId}] Step 5-9: Caption API (server processing)`);
-      
+      console.timeEnd(
+        `[${requestId}] Step 5-9: Caption API (server processing)`,
+      );
+
       if (!captionRes.ok) throw new Error("Failed to generate caption");
 
       // Start timing for Step 10: receiving via Realtime
       console.time(`[${requestId}] Step 10: Receive caption via Realtime`);
       console.log(`[${requestId}] Waiting for caption via Realtime...`);
-      
+
       // Store the start time in sessionStorage for end-to-end calculation
       sessionStorage.setItem(`start_${requestId}`, startTime.toString());
-
     } catch (error) {
       console.error("Error processing capture:", error);
     } finally {
@@ -160,8 +161,8 @@ export default function Home() {
         <main className="flex min-h-screen flex-col bg-gray-50">
           <header className="bg-white py-2 shadow-sm">
             <div className="container mx-auto px-2">
-              <div className="flex justify-between items-center">
-                <h1 className="font-bold text-lg text-gray-900">
+              <div className="flex items-center justify-between">
+                <h1 className="font-bold text-gray-900 text-lg">
                   Vision Assistant
                 </h1>
                 <p className="text-gray-500 text-xs">
@@ -173,7 +174,7 @@ export default function Home() {
 
           <div className="container mx-auto flex flex-1 flex-col px-2 py-2">
             {/* Top section with camera and controls side by side - works on mobile and desktop */}
-            <div className="flex flex-row gap-2 mb-2">
+            <div className="mb-2 flex flex-row gap-2">
               {/* Camera section - smaller width (50% on mobile) */}
               <div className="w-1/2">
                 <div className="rounded-lg bg-white p-2 shadow-sm">
@@ -186,10 +187,10 @@ export default function Home() {
                   />
                 </div>
               </div>
-              
+
               {/* Controls section - side by side with camera (50% on mobile) */}
               <div className="w-1/2">
-                <div className="rounded-lg bg-white p-2 shadow-sm h-full">
+                <div className="h-full rounded-lg bg-white p-2 shadow-sm">
                   <h2 className="mb-1 font-semibold text-sm">Controls</h2>
                   <CameraControls
                     fps={fps}
@@ -202,11 +203,11 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            
+
             {/* Status indicator */}
             {isUploading && (
               <div className="mb-2">
-                <div className="rounded-lg bg-white p-2 shadow-sm flex items-center">
+                <div className="flex items-center rounded-lg bg-white p-2 shadow-sm">
                   <svg
                     className="mr-2 h-5 w-5 animate-spin text-blue-600"
                     xmlns="http://www.w3.org/2000/svg"
@@ -230,11 +231,13 @@ export default function Home() {
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     />
                   </svg>
-                  <span className="text-blue-600 text-sm">Processing image...</span>
+                  <span className="text-blue-600 text-sm">
+                    Processing image...
+                  </span>
                 </div>
               </div>
             )}
-            
+
             {/* Captions section - full width */}
             <div className="flex-1">
               <div className="h-full rounded-lg bg-white p-2 shadow-sm">

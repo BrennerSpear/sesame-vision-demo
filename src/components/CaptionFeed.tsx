@@ -58,123 +58,149 @@ export const CaptionFeed = ({ captions, limit = 10 }: CaptionFeedProps) => {
                     // Extract any sentence with "most interesting" or "most important" for all caption types
                     const extractInterestingSentence = (text: string) => {
                       const sentences = text.trim().split(/(?<=[.!?])\s+/);
-                      const interestingSentence = sentences.find(sentence => 
-                        sentence.toLowerCase().includes("most interesting") || 
-                        sentence.toLowerCase().includes("most important")
+                      const interestingSentence = sentences.find(
+                        (sentence) =>
+                          sentence.toLowerCase().includes("most interesting") ||
+                          sentence.toLowerCase().includes("most important"),
                       );
-                      
+
                       // Return filtered sentences and the interesting one if found
                       return {
-                        filteredText: interestingSentence 
-                          ? sentences.filter(s => s !== interestingSentence).join(" ")
+                        filteredText: interestingSentence
+                          ? sentences
+                              .filter((s) => s !== interestingSentence)
+                              .join(" ")
                           : text,
-                        interestingSentence
+                        interestingSentence,
                       };
                     };
-                    
+
                     // If caption is already formatted with "Thoughts:"
                     if (item.caption.includes("Thoughts:")) {
                       const parts = item.caption.split("\n\n");
                       let thoughts = parts[0].replace("Thoughts: ", "");
-                      let observations = parts[1]?.replace("Observations: ", "") || "";
-                      
+                      let observations =
+                        parts[1]?.replace("Observations: ", "") || "";
+
                       // Extract interesting sentence from thoughts
-                      const { filteredText: filteredThoughts, interestingSentence: thoughtsInteresting } = 
-                        extractInterestingSentence(thoughts);
+                      const {
+                        filteredText: filteredThoughts,
+                        interestingSentence: thoughtsInteresting,
+                      } = extractInterestingSentence(thoughts);
                       thoughts = filteredThoughts;
-                      
+
                       // Extract interesting sentence from observations
-                      const { filteredText: filteredObservations, interestingSentence: observationsInteresting } = 
-                        extractInterestingSentence(observations);
+                      const {
+                        filteredText: filteredObservations,
+                        interestingSentence: observationsInteresting,
+                      } = extractInterestingSentence(observations);
                       observations = filteredObservations;
-                      
+
                       // Use the one from observations if available, otherwise from thoughts
-                      const interestingSentence = observationsInteresting || thoughtsInteresting;
-                      
+                      const interestingSentence =
+                        observationsInteresting || thoughtsInteresting;
+
                       return (
                         <>
                           <div className="mb-2">
-                            <span className="text-gray-500 text-xs font-medium">THOUGHTS:</span>
+                            <span className="font-medium text-gray-500 text-xs">
+                              THOUGHTS:
+                            </span>
                             <p className="text-gray-500 text-xs italic leading-snug">
                               {thoughts}
                             </p>
                           </div>
-                          
+
                           {interestingSentence && (
                             <div className="mb-2">
-                              <span className="text-indigo-600 text-xs font-medium">INTERESTING:</span>
-                              <p className="text-indigo-600 text-sm font-semibold">
+                              <span className="font-medium text-indigo-600 text-xs">
+                                INTERESTING:
+                              </span>
+                              <p className="font-semibold text-indigo-600 text-sm">
                                 {interestingSentence}
                               </p>
                             </div>
                           )}
-                          
+
                           <div>
-                            <span className="text-gray-700 text-xs font-medium">OBSERVATION:</span>
-                            <p className="text-gray-900 text-sm font-medium">
+                            <span className="font-medium text-gray-700 text-xs">
+                              OBSERVATION:
+                            </span>
+                            <p className="font-medium text-gray-900 text-sm">
                               {observations}
                             </p>
                           </div>
                         </>
                       );
-                    } 
+                    }
                     // For old captions, try to split the last sentence as the observation
-                    else {
-                      // Get all sentences
-                      const sentences = item.caption.trim().split(/(?<=[.!?])\s+/);
-                      
-                      if (sentences.length <= 1) {
-                        return <p className="text-gray-900 text-sm">{item.caption}</p>;
-                      }
-                      
-                      // Extract interesting sentence from all sentences
-                      const interestingIndex = sentences.findIndex(sentence => 
-                        sentence.toLowerCase().includes("most interesting") || 
-                        sentence.toLowerCase().includes("most important")
-                      );
-                      
-                      const interestingSentence = interestingIndex !== -1 
-                        ? sentences[interestingIndex] 
-                        : null;
-                      
-                      // Remove interesting sentence from array if found
-                      if (interestingIndex !== -1) {
-                        sentences.splice(interestingIndex, 1);
-                      }
-                      
-                      // The last sentence is the observation
-                      const observation = sentences.pop() || "";
-                      
-                      // All other sentences are the thoughts
-                      const thoughts = sentences.join(" ");
-                      
+
+                    // Get all sentences
+                    const sentences = item.caption
+                      .trim()
+                      .split(/(?<=[.!?])\s+/);
+
+                    if (sentences.length <= 1) {
                       return (
-                        <>
-                          <div className="mb-2">
-                            <span className="text-gray-500 text-xs font-medium">THOUGHTS:</span>
-                            <p className="text-gray-500 text-xs italic leading-snug">
-                              {thoughts}
-                            </p>
-                          </div>
-                          
-                          {interestingSentence && (
-                            <div className="mb-2">
-                              <span className="text-indigo-600 text-xs font-medium">INTERESTING:</span>
-                              <p className="text-indigo-600 text-sm font-semibold">
-                                {interestingSentence}
-                              </p>
-                            </div>
-                          )}
-                          
-                          <div>
-                            <span className="text-gray-700 text-xs font-medium">OBSERVATION:</span>
-                            <p className="text-gray-900 text-sm font-medium">
-                              {observation}
-                            </p>
-                          </div>
-                        </>
+                        <p className="text-gray-900 text-sm">{item.caption}</p>
                       );
                     }
+
+                    // Extract interesting sentence from all sentences
+                    const interestingIndex = sentences.findIndex(
+                      (sentence) =>
+                        sentence.toLowerCase().includes("most interesting") ||
+                        sentence.toLowerCase().includes("most important"),
+                    );
+
+                    const interestingSentence =
+                      interestingIndex !== -1
+                        ? sentences[interestingIndex]
+                        : null;
+
+                    // Remove interesting sentence from array if found
+                    if (interestingIndex !== -1) {
+                      sentences.splice(interestingIndex, 1);
+                    }
+
+                    // The last sentence is the observation
+                    const observation = sentences.pop() || "";
+
+                    // All other sentences are the thoughts
+                    const thoughts = sentences.join(" ");
+
+                    return (
+                      <>
+                        <div className="mb-2">
+                          <span className="font-medium text-gray-500 text-xs">
+                            THOUGHTS:
+                          </span>
+                          <p className="text-gray-500 text-xs italic leading-snug">
+                            {thoughts}
+                          </p>
+                        </div>
+
+                        {interestingSentence && (
+                          <div className="mb-2">
+                            <span className="font-medium text-indigo-600 text-xs">
+                              INTERESTING:
+                            </span>
+                            <p className="font-semibold text-indigo-600 text-sm">
+                              {interestingSentence}
+                            </p>
+                          </div>
+                        )}
+
+                        <div>
+                          <span className="font-medium text-gray-700 text-xs">
+                            OBSERVATION:
+                          </span>
+                          <p className="font-medium text-gray-900 text-sm">
+                            {observation}
+                          </p>
+                        </div>
+                      </>
+                    );
                   })()}
                   <p className="mt-1 text-gray-500 text-xs">
                     {new Date(item.timestamp).toLocaleTimeString()}

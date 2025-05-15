@@ -62,9 +62,8 @@ Required environment variables:
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_KEY=your-service-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-key
 REPLICATE_API_TOKEN=your-replicate-token
 DATABASE_URL=your-supabase-db-url
 DIRECT_URL=your-supabase-direct-db-url
-SITE_URL=your-site-url
 ```

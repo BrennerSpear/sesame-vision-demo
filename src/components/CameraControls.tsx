@@ -30,7 +30,7 @@ export const CameraControls = ({
           {isActive ? "Stop Camera" : "Start Camera"}
         </button>
       </div>
-      
+
       <div>
         <div className="flex justify-between">
           <label htmlFor="fps-slider" className="block font-medium text-xs">
@@ -48,7 +48,7 @@ export const CameraControls = ({
           step="1"
           value={fps}
           onChange={(e) => setFps(Number(e.target.value))}
-          className="w-full h-4"
+          className="h-4 w-full"
         />
       </div>
 
@@ -69,7 +69,7 @@ export const CameraControls = ({
           step="0.05"
           value={quality}
           onChange={(e) => setQuality(Number(e.target.value))}
-          className="w-full h-4"
+          className="h-4 w-full"
         />
       </div>
     </div>

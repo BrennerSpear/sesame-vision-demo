@@ -17,7 +17,7 @@ export async function generateCaption(imageUrl: string): Promise<string> {
       input: {
         image: imageUrl,
         prompt:
-          "write out your thought process for a bit about all the things happening in this scene, and then Summarize the most important or interesting thing happening in this scene in one concise sentence at the end. Don't use phrases like 'in this image' or 'I can see' in the final summary sentence.",
+          "write out your thought process for a bit about all the things happening in this scene, and then state the most important or interesting thing happening in this scene in one concise sentence without explaining why it's important or interesting.",
         max_tokens: 512,
         temperature: 0.7,
       },

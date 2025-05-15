@@ -44,17 +44,20 @@ export function useRealtimeCaptions(sessionId: string) {
         // Track timing for step 10: Receiving caption via Realtime
         const requestId = payload.payload.requestId;
         if (requestId) {
-          console.timeEnd(`[${requestId}] Step 10: Receive caption via Realtime`);
-          
+          console.timeEnd(
+            `[${requestId}] Step 10: Receive caption via Realtime`,
+          );
+
           // Calculate and log total end-to-end time
-          const totalTime = Date.now() - Number(sessionStorage.getItem(`start_${requestId}`));
+          const totalTime =
+            Date.now() - Number(sessionStorage.getItem(`start_${requestId}`));
           console.log(`[${requestId}] === FULL PIPELINE COMPLETE ===`);
           console.log(`[${requestId}] Total end-to-end time: ${totalTime}ms`);
-          
+
           // Create a summary of all timing data
           console.log(`[${requestId}] === TIMING SUMMARY ===`);
         }
-        
+
         // Add the new caption to the state
         setCaptions((current) => {
           // Check if we already have this caption (avoid duplicates)
