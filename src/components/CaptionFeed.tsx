@@ -53,36 +53,65 @@ export const CaptionFeed = ({ captions, limit = 10 }: CaptionFeedProps) => {
                   />
                 </div>
                 <div className="flex-1">
-                  {item.caption.includes("Thoughts:") ? (
-                    <>
-                      {/* Split and format the caption */}
-                      {(() => {
-                        const parts = item.caption.split("\n\n");
-                        const thoughts = parts[0].replace("Thoughts: ", "");
-                        const observations = parts[1]?.replace("Observations: ", "") || "";
-                        
-                        return (
-                          <>
-                            <div className="mb-2">
-                              <span className="text-gray-500 text-xs font-medium">THOUGHTS:</span>
-                              <p className="text-gray-500 text-xs italic leading-snug">
-                                {thoughts}
-                              </p>
-                            </div>
-                            
-                            <div>
-                              <span className="text-gray-700 text-xs font-medium">OBSERVATION:</span>
-                              <p className="text-gray-900 text-sm font-medium">
-                                {observations}
-                              </p>
-                            </div>
-                          </>
-                        );
-                      })()}
-                    </>
-                  ) : (
-                    <p className="text-gray-900 text-sm">{item.caption}</p>
-                  )}
+                  {/* Process all captions with consistent formatting */}
+                  {(() => {
+                    // If caption is already formatted with "Thoughts:"
+                    if (item.caption.includes("Thoughts:")) {
+                      const parts = item.caption.split("\n\n");
+                      const thoughts = parts[0].replace("Thoughts: ", "");
+                      const observations = parts[1]?.replace("Observations: ", "") || "";
+                      
+                      return (
+                        <>
+                          <div className="mb-2">
+                            <span className="text-gray-500 text-xs font-medium">THOUGHTS:</span>
+                            <p className="text-gray-500 text-xs italic leading-snug">
+                              {thoughts}
+                            </p>
+                          </div>
+                          
+                          <div>
+                            <span className="text-gray-700 text-xs font-medium">OBSERVATION:</span>
+                            <p className="text-gray-900 text-sm font-medium">
+                              {observations}
+                            </p>
+                          </div>
+                        </>
+                      );
+                    } 
+                    // For old captions, try to split the last sentence as the observation
+                    else {
+                      const sentences = item.caption.trim().split(/(?<=[.!?])\s+/);
+                      
+                      if (sentences.length <= 1) {
+                        return <p className="text-gray-900 text-sm">{item.caption}</p>;
+                      }
+                      
+                      // The last sentence is the observation
+                      const observation = sentences.pop() || "";
+                      
+                      // All other sentences are the thoughts
+                      const thoughts = sentences.join(" ");
+                      
+                      return (
+                        <>
+                          <div className="mb-2">
+                            <span className="text-gray-500 text-xs font-medium">THOUGHTS:</span>
+                            <p className="text-gray-500 text-xs italic leading-snug">
+                              {thoughts}
+                            </p>
+                          </div>
+                          
+                          <div>
+                            <span className="text-gray-700 text-xs font-medium">OBSERVATION:</span>
+                            <p className="text-gray-900 text-sm font-medium">
+                              {observation}
+                            </p>
+                          </div>
+                        </>
+                      );
+                    }
+                  })()}
                   <p className="mt-1 text-gray-500 text-xs">
                     {new Date(item.timestamp).toLocaleTimeString()}
                   </p>
