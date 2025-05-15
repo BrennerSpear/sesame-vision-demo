@@ -53,7 +53,36 @@ export const CaptionFeed = ({ captions, limit = 10 }: CaptionFeedProps) => {
                   />
                 </div>
                 <div className="flex-1">
-                  <p className="text-gray-900 text-sm">{item.caption}</p>
+                  {item.caption.includes("Thoughts:") ? (
+                    <>
+                      {/* Split and format the caption */}
+                      {(() => {
+                        const parts = item.caption.split("\n\n");
+                        const thoughts = parts[0].replace("Thoughts: ", "");
+                        const observations = parts[1]?.replace("Observations: ", "") || "";
+                        
+                        return (
+                          <>
+                            <div className="mb-2">
+                              <span className="text-gray-500 text-xs font-medium">THOUGHTS:</span>
+                              <p className="text-gray-500 text-xs italic leading-snug">
+                                {thoughts}
+                              </p>
+                            </div>
+                            
+                            <div>
+                              <span className="text-gray-700 text-xs font-medium">OBSERVATION:</span>
+                              <p className="text-gray-900 text-sm font-medium">
+                                {observations}
+                              </p>
+                            </div>
+                          </>
+                        );
+                      })()}
+                    </>
+                  ) : (
+                    <p className="text-gray-900 text-sm">{item.caption}</p>
+                  )}
                   <p className="mt-1 text-gray-500 text-xs">
                     {new Date(item.timestamp).toLocaleTimeString()}
                   </p>

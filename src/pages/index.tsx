@@ -8,7 +8,7 @@ import { useRealtimeCaptions } from "../hooks/useRealtimeCaptions";
 
 export default function Home() {
   // Camera settings
-  const [fps, setFps] = useState(10);
+  const [fps, setFps] = useState(1);
   const [quality, setQuality] = useState(0.75);
   const [isActive, setIsActive] = useState(false);
 

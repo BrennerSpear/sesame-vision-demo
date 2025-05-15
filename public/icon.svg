@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="240" fill="#4F46E5" />
+  
+  <!-- Camera lens outer ring -->
+  <circle cx="256" cy="256" r="160" fill="#312E81" stroke="#A5B4FC" stroke-width="8" />
+  
+  <!-- Camera lens inner circle -->
+  <circle cx="256" cy="256" r="120" fill="#1E1B4B" stroke="#818CF8" stroke-width="4" />
+  
+  <!-- Camera aperture blades -->
+  <path d="M256 136 L226 196 L166 196 L196 256 L166 316 L226 316 L256 376 L286 316 L346 316 L316 256 L346 196 L286 196 Z" fill="#A5B4FC" />
+  
+  <!-- Highlight reflection -->
+  <circle cx="210" cy="210" r="24" fill="#EEF2FF" opacity="0.7" />
+  
+  <!-- Caption line 1 -->
+  <rect x="160" y="420" width="192" height="12" rx="6" fill="#EEF2FF" opacity="0.9" />
+  
+  <!-- Caption line 2 -->
+  <rect x="180" y="444" width="152" height="12" rx="6" fill="#EEF2FF" opacity="0.7" />
+</svg>

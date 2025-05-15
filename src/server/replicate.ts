@@ -17,8 +17,8 @@ export async function generateCaption(imageUrl: string): Promise<string> {
       input: {
         image: imageUrl,
         prompt:
-          "Describe this image in detail. What do you see? Approximately 1 paragraph.",
-        max_tokens: 300,
+          "write out your thought process for a bit about all the things happening in this scene, and then '<summary>' and then Summarize the most important or interesting thing happening in this scene in one concise sentence at the end.",
+        max_tokens: 512,
         temperature: 0.7,
       },
     });
