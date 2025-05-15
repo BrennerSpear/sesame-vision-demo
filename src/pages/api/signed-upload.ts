@@ -18,19 +18,24 @@ export default async function handler(
     const bucketName = "vision-images";
     const filePath = `frames/${fileName}`;
 
-    console.log("Creating bucket if not exists...");
-    // Create the bucket if it doesn't exist
-    const { error: bucketError } = await supabaseAdmin.storage.createBucket(
-      bucketName,
-      {
-        public: true,
-        fileSizeLimit: 5242880, // 5MB
-      },
-    );
-
-    if (bucketError && bucketError.message !== "Bucket already exists") {
-      console.error("Error creating bucket:", bucketError);
-      return res.status(500).json({ error: "Failed to create bucket" });
+    try {
+      console.log("Creating bucket if not exists...");
+      // Create the bucket if it doesn't exist
+      await supabaseAdmin.storage.createBucket(
+        bucketName,
+        {
+          public: true,
+          fileSizeLimit: 5242880, // 5MB
+        },
+      );
+    } catch (error) {
+      // Ignore error if bucket already exists
+      const supabaseError = error as { status?: number; message?: string };
+      if (supabaseError.status !== 400 || !supabaseError.message?.includes("already exists")) {
+        console.error("Error creating bucket:", error);
+        return res.status(500).json({ error: "Failed to create bucket" });
+      }
+      console.log("Bucket already exists, continuing...");
     }
 
     console.log("Creating signed URL...");

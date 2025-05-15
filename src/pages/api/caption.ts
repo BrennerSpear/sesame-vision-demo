@@ -44,6 +44,22 @@ export default async function handler(
     // Create a unique ID for this caption
     const captionId = uuidv4();
 
+    // Check if session exists, if not create it
+    const existingSession = await db.session.findUnique({
+      where: {
+        id: session,
+      },
+    });
+
+    if (!existingSession) {
+      console.log("Creating new session:", session);
+      await db.session.create({
+        data: {
+          id: session,
+        },
+      });
+    }
+
     // Store the caption in the database
     await db.caption.create({
       data: {
