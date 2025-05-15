@@ -163,7 +163,37 @@ export default function Home() {
             <div className="container mx-auto px-2">
               <div className="flex items-center justify-between">
                 <h1 className="font-bold text-gray-900 text-lg">
-                  Vision Assistant
+                  <span
+                    style={{ display: "inline-block", transform: "scaleX(-1)" }}
+                  >
+                    s
+                  </span>
+                  <span
+                    style={{ display: "inline-block", transform: "scaleX(-1)" }}
+                  >
+                    e
+                  </span>
+                  <span
+                    style={{ display: "inline-block", transform: "scaleX(-1)" }}
+                  >
+                    s
+                  </span>
+                  <span
+                    style={{ display: "inline-block", transform: "scaleX(-1)" }}
+                  >
+                    a
+                  </span>
+                  <span
+                    style={{ display: "inline-block", transform: "scaleX(-1)" }}
+                  >
+                    m
+                  </span>
+                  <span
+                    style={{ display: "inline-block", transform: "scaleX(-1)" }}
+                  >
+                    e
+                  </span>{" "}
+                  vision assistant
                 </h1>
                 <p className="text-gray-500 text-xs">
                   Session: {sessionId.slice(0, 8)}
