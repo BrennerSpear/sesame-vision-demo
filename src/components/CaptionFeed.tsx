@@ -78,9 +78,17 @@ export const CaptionFeed = ({ captions, limit = 10 }: CaptionFeedProps) => {
                     // If caption is already formatted with "Thoughts:"
                     if (item.caption.includes("Thoughts:")) {
                       const parts = item.caption.split("\n\n");
-                      let thoughts = parts[0].replace("Thoughts: ", "");
-                      let observations =
-                        parts[1]?.replace("Observations: ", "") || "";
+                      // Ensure parts[0] exists and handle the replace safely
+                      let thoughts = "";
+                      if (parts.length > 0 && parts[0]) {
+                        thoughts = parts[0].replace("Thoughts: ", "");
+                      }
+
+                      // Make sure observations exists and handle the replace safely
+                      let observations = "";
+                      if (parts.length > 1 && parts[1]) {
+                        observations = parts[1].replace("Observations: ", "");
+                      }
 
                       // Extract interesting sentence from thoughts
                       const {
