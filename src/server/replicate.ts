@@ -1,24 +1,45 @@
 import Replicate from "replicate";
-import { env } from "../env";
 import { getPrompt } from "../config/prompts";
+import { env } from "../env";
 
 // Create a Replicate client instance
 const replicate = new Replicate({
   auth: env.REPLICATE_API_TOKEN,
 });
 
-// LLaVA-13B model ID and version
+// Model IDs and versions
 const LLAVA_MODEL_13B =
-  "yorickvp/llava-13b:2facb4a474a0462c15041b78b1ad70952ea46b5ec6ad29583c0b29dbd4249591";
+  "yorickvp/llava-13b:2facb4a474a0462c15041b78b1ad70952ea46b5ec6ad29583c0b29dbd4249591" as const;
 
 const LLAVA_MODEL_7B =
-  "yorickvp/llava-v1.6-mistral-7b:19be067b589d0c46689ffa7cc3ff321447a441986a7694c01225973c2eafc874";
+  "yorickvp/llava-v1.6-mistral-7b:19be067b589d0c46689ffa7cc3ff321447a441986a7694c01225973c2eafc874" as const;
+
+const DEEPSEEK_MODEL_7B =
+  "deepseek-ai/deepseek-vl-7b-base:d1823e6f68cd3d57f2d315b9357dfa85f53817120ae0de8d2b95fbc8e93a1385" as const;
 
 // Function to generate a caption for an image URL
-export async function generateCaption(imageUrl: string, model: "13b" | "7b" = "13b"): Promise<string> {
+export async function generateCaption(
+  imageUrl: string,
+  model: "13b" | "7b" | "deepseek" = "13b",
+): Promise<string> {
   try {
-    const modelId = model === "7b" ? LLAVA_MODEL_7B : LLAVA_MODEL_13B;
-    
+    let modelId:
+      | typeof LLAVA_MODEL_13B
+      | typeof LLAVA_MODEL_7B
+      | typeof DEEPSEEK_MODEL_7B;
+
+    switch (model) {
+      case "7b":
+        modelId = LLAVA_MODEL_7B;
+        break;
+      case "deepseek":
+        modelId = DEEPSEEK_MODEL_7B;
+        break;
+      default:
+        modelId = LLAVA_MODEL_13B;
+        break;
+    }
+
     const output = await replicate.run(modelId, {
       input: {
         image: imageUrl,

@@ -1,11 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
+import { setPrompt } from "../../config/prompts";
 import { env } from "../../env";
 import { db } from "../../server/db";
 import { generateCaption } from "../../server/replicate";
 import { supabaseAdmin } from "../../server/supabase";
-import { setPrompt } from "../../config/prompts";
 
 /**
  * Format a caption into "thoughts: <all but last sentence> observations: <last sentence>"
@@ -34,7 +34,7 @@ const requestSchema = z.object({
   timestamp: z.string().optional(),
   session: z.string(),
   requestId: z.string().optional(), // For tracking pipeline timing
-  model: z.enum(["13b", "7b"]).default("13b"),
+  model: z.enum(["13b", "7b", "deepseek"]).default("13b"),
   prompt: z.string().optional(), // Optional prompt parameter
 });
 
@@ -56,9 +56,15 @@ export default async function handler(
       });
     }
 
-    const { path, session, requestId = "unknown", model, prompt } = validation.data;
+    const {
+      path,
+      session,
+      requestId = "unknown",
+      model,
+      prompt,
+    } = validation.data;
     const timestamp = validation.data.timestamp ?? new Date().toISOString();
-    
+
     // If a prompt was provided, set it as the current prompt
     if (prompt) {
       setPrompt(prompt);

@@ -3,8 +3,8 @@ import type { Caption } from "../components/CaptionFeed";
 import { createSupabaseClient } from "../utils/supabase-browser";
 
 export function useRealtimeCaptions(
-  sessionId: string, 
-  onNewCaption?: () => void
+  sessionId: string,
+  onNewCaption?: () => void,
 ) {
   const [captions, setCaptions] = useState<Caption[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -70,16 +70,16 @@ export function useRealtimeCaptions(
           if (current.some((c) => c.id === payload.payload.id)) {
             return current;
           }
-          
+
           // Create the new state first
           const newState = [...current, payload.payload];
-          
+
           // Call the onNewCaption callback separately, after state update
           // This prevents the callback from running during render
           if (onNewCaption) {
             setTimeout(onNewCaption, 0);
           }
-          
+
           return newState;
         });
       })
@@ -97,7 +97,7 @@ export function useRealtimeCaptions(
     return () => {
       subscription.unsubscribe();
     };
-  }, [sessionId]);
+  }, [sessionId, onNewCaption]);
 
   return { captions, isLoading, error };
 }

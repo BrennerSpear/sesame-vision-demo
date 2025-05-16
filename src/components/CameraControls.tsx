@@ -5,8 +5,8 @@ interface CameraControlsProps {
   setQuality: (quality: number) => void;
   isActive: boolean;
   setIsActive: (isActive: boolean) => void;
-  model: "13b" | "7b";
-  setModel: (model: "13b" | "7b") => void;
+  model: "13b" | "7b" | "deepseek";
+  setModel: (model: "13b" | "7b" | "deepseek") => void;
   prompt: string;
   setPrompt: (prompt: string) => void;
 }
@@ -37,7 +37,6 @@ export const CameraControls = ({
         </button>
       </div>
 
-
       <div>
         <div className="flex justify-between">
           <label htmlFor="quality-slider" className="block font-medium text-xs">
@@ -58,14 +57,12 @@ export const CameraControls = ({
           className="h-4 w-full"
         />
       </div>
-      
+
       <div>
         <div className="flex justify-between">
-          <label className="block font-medium text-xs">
-            Model
-          </label>
+          <span className="block font-medium text-xs">Model</span>
         </div>
-        <div className="grid grid-cols-2 gap-2 mt-1">
+        <div className="mt-1 grid grid-cols-3 gap-2">
           <button
             type="button"
             onClick={() => setModel("13b")}
@@ -88,17 +85,26 @@ export const CameraControls = ({
           >
             LLaVA-7B
           </button>
+          <button
+            type="button"
+            onClick={() => setModel("deepseek")}
+            className={`rounded px-2 py-1 text-xs ${
+              model === "deepseek"
+                ? "bg-indigo-600 text-white"
+                : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+            }`}
+          >
+            DeepSeek-7B
+          </button>
         </div>
       </div>
-      
+
       <div>
         <div className="flex justify-between">
-          <label className="block font-medium text-xs">
-            Prompt
-          </label>
+          <span className="block font-medium text-xs">Prompt</span>
         </div>
         <div className="mt-1">
-          <select 
+          <select
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             className="w-full rounded border border-gray-300 px-2 py-1 text-xs"
@@ -109,7 +115,7 @@ export const CameraControls = ({
               </option>
             ))}
           </select>
-          <div className="mt-2 text-xs text-gray-500 h-40 overflow-y-auto rounded border border-gray-200 p-2 whitespace-pre-wrap">
+          <div className="mt-2 h-40 overflow-y-auto whitespace-pre-wrap rounded border border-gray-200 p-2 text-gray-500 text-xs">
             {prompt}
           </div>
         </div>

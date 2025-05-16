@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface CameraProps {
   onCapture: (blob: Blob) => void;
@@ -86,26 +86,26 @@ export const Camera = ({ onCapture, quality, isActive }: CameraProps) => {
     };
   }, []);
 
-  // Function to capture a single frame
-  const captureFrame = () => {
+  // Function to capture a single frame - using useCallback to properly handle dependencies
+  const captureFrame = useCallback(() => {
     if (isCapturing) return; // Don't start a new capture if already capturing
-    
+
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    
+
     if (video && canvas && video.readyState >= 2) {
       setIsCapturing(true);
-      
+
       try {
         const ctx = canvas.getContext("2d");
         if (ctx) {
           // Set canvas dimensions to match video
           canvas.width = video.videoWidth;
           canvas.height = video.videoHeight;
-          
+
           // Draw video frame on canvas
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          
+
           // Convert canvas to blob and send to parent
           canvas.toBlob(
             (blob) => {
@@ -125,15 +125,15 @@ export const Camera = ({ onCapture, quality, isActive }: CameraProps) => {
         setIsCapturing(false);
       }
     }
-  };
-  
+  }, [isCapturing, onCapture, quality]); // Include all dependencies used inside the callback
+
   // Capture a frame when active and not already capturing
   useEffect(() => {
     // Only capture if active and not already capturing
     if (isActive && !isCapturing) {
       captureFrame();
     }
-  }, [isActive, isCapturing, quality, onCapture]);
+  }, [isActive, isCapturing, captureFrame]);
 
   return (
     <div className="relative w-full">

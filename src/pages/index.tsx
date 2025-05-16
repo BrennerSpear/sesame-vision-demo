@@ -4,14 +4,14 @@ import { v4 as uuidv4 } from "uuid";
 import { Camera } from "../components/Camera";
 import { CameraControls } from "../components/CameraControls";
 import { type Caption, CaptionFeed } from "../components/CaptionFeed";
-import { useRealtimeCaptions } from "../hooks/useRealtimeCaptions";
 import { DEFAULT_PROMPT } from "../config/prompts";
+import { useRealtimeCaptions } from "../hooks/useRealtimeCaptions";
 
 export default function Home() {
   // Camera settings
   const [quality, setQuality] = useState(0.75);
   const [isActive, setIsActive] = useState(false);
-  const [model, setModel] = useState<"13b" | "7b">("13b");
+  const [model, setModel] = useState<"13b" | "7b" | "deepseek">("13b");
   const [prompt, setPrompt] = useState(DEFAULT_PROMPT);
 
   // Session management
@@ -20,17 +20,22 @@ export default function Home() {
 
   // Uploading state
   const [isUploading, setIsUploading] = useState(false);
-  const [processingImageUrl, setProcessingImageUrl] = useState<string | null>(null);
+  const [processingImageUrl, setProcessingImageUrl] = useState<string | null>(
+    null,
+  );
 
   // Use the realtime captions hook to get live updates
   const handleNewCaption = () => {
     // Clear the processing image when a new caption is received
     setProcessingImageUrl(null);
-    
+
     // Make the camera available for a new capture by briefly toggling isUploading
     setIsUploading(false);
   };
-  const { captions, isLoading, error } = useRealtimeCaptions(sessionId, handleNewCaption);
+  const { captions, isLoading, error } = useRealtimeCaptions(
+    sessionId,
+    handleNewCaption,
+  );
 
   // Initialize session on first load
   useEffect(() => {
@@ -86,7 +91,7 @@ export default function Home() {
       console.timeEnd(`[${requestId}] Step 4: Upload image to Supabase`);
 
       if (!uploadResult.ok) throw new Error("Failed to upload image");
-      
+
       // Store the getUrl for displaying the processing image
       setProcessingImageUrl(getUrl);
 
@@ -256,7 +261,7 @@ export default function Home() {
             {isUploading && (
               <div className="mb-2">
                 <div className="flex items-center rounded-lg bg-white p-2 shadow-sm">
-                  <div className="flex items-center flex-1">
+                  <div className="flex flex-1 items-center">
                     <svg
                       className="mr-2 h-5 w-5 animate-spin text-blue-600"
                       xmlns="http://www.w3.org/2000/svg"
@@ -265,7 +270,9 @@ export default function Home() {
                       role="img"
                       aria-labelledby="processingSpinnerTitle"
                     >
-                      <title id="processingSpinnerTitle">Processing Image</title>
+                      <title id="processingSpinnerTitle">
+                        Processing Image
+                      </title>
                       <circle
                         className="opacity-25"
                         cx="12"
@@ -284,13 +291,14 @@ export default function Home() {
                       <span className="text-blue-600 text-sm">
                         Processing image with LLaVA-{model}...
                       </span>
-                      <div className="text-xs text-gray-500">
-                        This may take 5-15 seconds. Next photo will be taken automatically when complete.
+                      <div className="text-gray-500 text-xs">
+                        This may take 5-15 seconds. Next photo will be taken
+                        automatically when complete.
                       </div>
                     </div>
                   </div>
                   {processingImageUrl && (
-                    <div className="ml-2 relative h-16 w-16 flex-shrink-0">
+                    <div className="relative ml-2 h-16 w-16 flex-shrink-0">
                       <img
                         src={processingImageUrl}
                         alt="Processing"
