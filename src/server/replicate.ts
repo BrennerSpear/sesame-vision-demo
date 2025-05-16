@@ -17,16 +17,20 @@ const LLAVA_MODEL_7B =
 const DEEPSEEK_MODEL_7B =
   "deepseek-ai/deepseek-vl-7b-base:d1823e6f68cd3d57f2d315b9357dfa85f53817120ae0de8d2b95fbc8e93a1385" as const;
 
+const DEEPSEEK_MODEL_VL2 =
+  "deepseek-ai/deepseek-vl2:e5caf557dd9e5dcee46442e1315291ef1867f027991ede8ff95e304d4f734200" as const;
+
 // Function to generate a caption for an image URL
 export async function generateCaption(
   imageUrl: string,
-  model: "13b" | "7b" | "deepseek" = "13b",
+  model: "13b" | "7b" | "deepseek" | "deepseek2" = "13b",
 ): Promise<string> {
   try {
     let modelId:
       | typeof LLAVA_MODEL_13B
       | typeof LLAVA_MODEL_7B
-      | typeof DEEPSEEK_MODEL_7B;
+      | typeof DEEPSEEK_MODEL_7B
+      | typeof DEEPSEEK_MODEL_VL2;
 
     switch (model) {
       case "7b":
@@ -34,6 +38,9 @@ export async function generateCaption(
         break;
       case "deepseek":
         modelId = DEEPSEEK_MODEL_7B;
+        break;
+      case "deepseek2":
+        modelId = DEEPSEEK_MODEL_VL2;
         break;
       default:
         modelId = LLAVA_MODEL_13B;

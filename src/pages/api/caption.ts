@@ -34,7 +34,7 @@ const requestSchema = z.object({
   timestamp: z.string().optional(),
   session: z.string(),
   requestId: z.string().optional(), // For tracking pipeline timing
-  model: z.enum(["13b", "7b", "deepseek"]).default("13b"),
+  model: z.enum(["13b", "7b", "deepseek", "deepseek2"]).default("13b"),
   prompt: z.string().optional(), // Optional prompt parameter
 });
 

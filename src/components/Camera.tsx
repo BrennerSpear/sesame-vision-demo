@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface CameraProps {
   onCapture: (blob: Blob) => void;
@@ -86,8 +86,8 @@ export const Camera = ({ onCapture, quality, isActive }: CameraProps) => {
     };
   }, []);
 
-  // Function to capture a single frame - using useCallback to properly handle dependencies
-  const captureFrame = useCallback(() => {
+  // Function to capture a single frame
+  const captureFrame = () => {
     if (isCapturing) return; // Don't start a new capture if already capturing
 
     const video = videoRef.current;
@@ -125,15 +125,16 @@ export const Camera = ({ onCapture, quality, isActive }: CameraProps) => {
         setIsCapturing(false);
       }
     }
-  }, [isCapturing, onCapture, quality]); // Include all dependencies used inside the callback
+  };
 
   // Capture a frame when active and not already capturing
+  // biome-ignore lint/correctness/useExhaustiveDependencies: it renders every frame
   useEffect(() => {
     // Only capture if active and not already capturing
     if (isActive && !isCapturing) {
       captureFrame();
     }
-  }, [isActive, isCapturing, captureFrame]);
+  }, [isActive, isCapturing]);
 
   return (
     <div className="relative w-full">

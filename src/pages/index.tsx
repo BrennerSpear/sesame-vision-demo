@@ -1,5 +1,5 @@
 import Head from "next/head";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { Camera } from "../components/Camera";
 import { CameraControls } from "../components/CameraControls";
@@ -11,7 +11,9 @@ export default function Home() {
   // Camera settings
   const [quality, setQuality] = useState(0.75);
   const [isActive, setIsActive] = useState(false);
-  const [model, setModel] = useState<"13b" | "7b" | "deepseek">("13b");
+  const [model, setModel] = useState<"13b" | "7b" | "deepseek" | "deepseek2">(
+    "13b",
+  );
   const [prompt, setPrompt] = useState(DEFAULT_PROMPT);
 
   // Session management
@@ -25,13 +27,14 @@ export default function Home() {
   );
 
   // Use the realtime captions hook to get live updates
-  const handleNewCaption = () => {
+  // Using useCallback to memoize this function and prevent unnecessary re-renders
+  const handleNewCaption = useCallback(() => {
     // Clear the processing image when a new caption is received
     setProcessingImageUrl(null);
 
     // Make the camera available for a new capture by briefly toggling isUploading
     setIsUploading(false);
-  };
+  }, []);
   const { captions, isLoading, error } = useRealtimeCaptions(
     sessionId,
     handleNewCaption,

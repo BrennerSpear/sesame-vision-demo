@@ -5,8 +5,8 @@ interface CameraControlsProps {
   setQuality: (quality: number) => void;
   isActive: boolean;
   setIsActive: (isActive: boolean) => void;
-  model: "13b" | "7b" | "deepseek";
-  setModel: (model: "13b" | "7b" | "deepseek") => void;
+  model: "13b" | "7b" | "deepseek" | "deepseek2";
+  setModel: (model: "13b" | "7b" | "deepseek" | "deepseek2") => void;
   prompt: string;
   setPrompt: (prompt: string) => void;
 }
@@ -62,7 +62,7 @@ export const CameraControls = ({
         <div className="flex justify-between">
           <span className="block font-medium text-xs">Model</span>
         </div>
-        <div className="mt-1 grid grid-cols-3 gap-2">
+        <div className="mt-1 grid grid-cols-2 gap-2">
           <button
             type="button"
             onClick={() => setModel("13b")}
@@ -95,6 +95,17 @@ export const CameraControls = ({
             }`}
           >
             DeepSeek-7B
+          </button>
+          <button
+            type="button"
+            onClick={() => setModel("deepseek2")}
+            className={`rounded px-2 py-1 text-xs ${
+              model === "deepseek2"
+                ? "bg-indigo-600 text-white"
+                : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+            }`}
+          >
+            DeepSeek-VL2
           </button>
         </div>
       </div>
